@@ -21,7 +21,7 @@ jobs:
           node-version: 20
           cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
-          scope: "@pawntown"
+          scope: "@mono424"
       - name: Get pnpm store directory
         shell: bash
         run: |
@@ -36,14 +36,11 @@ jobs:
       - name: Install Component Dependencies
         run: pnpm install --frozen-lockfile
       - name: Install Wrapper Dependencies
-        working-directory: ./react-wrapper
         run: pnpm install --frozen-lockfile
       - name: Build Package
-        working-directory: ./react-wrapper
         run: pnpm build
       - name: Publish Package
         shell: bash
-        working-directory: ./react-wrapper
         run: pnpm publish ./ --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
