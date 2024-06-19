@@ -1,16 +1,10 @@
 {
   "compilerOptions": {
-    "target": "es2021",
-    "module": "es2015",
-    "moduleResolution": "node",
-    "lib": ["es2021", "dom"],
+    "module": "commonjs",
+    "target": "es2020",
     "declaration": true,
-    "declarationMap": true,
-    "outDir": "./lib",
-    "experimentalDecorators": true,
-    "useDefineForClassFields": false,
-    "esModuleInterop": true
+    "outDir": "./dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.spec.ts"]
+  "exclude": ["src/**/*.test.ts"]
 }

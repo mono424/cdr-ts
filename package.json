@@ -2,12 +2,13 @@
   "name": "@mono424/cdr-ts",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "jest",
     "format": "prettier --write --parser typescript 'src/*.ts'",
     "lint": "eslint . --fix",
-    "build": "tsc && vite build"
+    "build": "tsc"
   },
   "author": "",
   "license": "ISC",
@@ -25,7 +26,6 @@
     "globals": "^15.6.0",
     "prettier": "^3.3.2",
     "ts-jest": "^29.1.5",
-    "typescript": "^5.4.5",
-    "vite": "^5.3.1"
+    "typescript": "^5.4.5"
   }
 }
