@@ -1,6 +1,8 @@
 # CDR-TS
 
-CDR-TS is a library to parse Common Data Representation (CDR) data in TypeScript objects. Compared to other libraries, CDR-TS uses schema-definitions to define the structure of the data. This allows for a more type-safe and structured way to work with CDR data.
+CDR-TS is a library to parse git remote add origin git@github.com:mono424/cdr-ts.git
+git branch -M main
+git push -u origin main (CDR) data in TypeScript objects. Compared to other libraries, CDR-TS uses schema-definitions to define the structure of the data. This allows for a more type-safe and structured way to work with CDR data.
 
 ## Install
 
@@ -66,7 +68,9 @@ const testMessageSchema: TestMessageSchema = {
 import {
   decodeCDR
 } from "cdr-ts";
+
 const testPayload = "<base64-data>";
+
 const { header, payload } = decodeCDR(testPayload, testMessageSchema);
 console.log(payload);
 ```
