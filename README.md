@@ -5,15 +5,15 @@ CDR-TS is a library to parse Common Data Representation (CDR) data in TypeScript
 ## Install
 
 ```bash
-npm install mono424@cdr-ts
+npm install @mono424/cdr-ts
 ```
 
 ```bash
-yarn install mono424@cdr-ts
+yarn install @mono424/cdr-ts
 ```
 
 ```bash
-pnpm install mono424@cdr-ts
+pnpm install @mono424/cdr-ts
 ```
 
 ## Usage
