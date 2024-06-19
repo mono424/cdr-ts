@@ -1,6 +1,6 @@
 {
   "name": "@mono424/cdr-ts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,8 +10,8 @@
     "lint": "eslint . --fix",
     "build": "tsc"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Khadim Fall <info@khadimfall.com> (https://khad.im/)",
+  "license": "WTFPL",
   "devDependencies": {
     "@eslint/compat": "^1.1.0",
     "@types/jest": "^29.5.12",
