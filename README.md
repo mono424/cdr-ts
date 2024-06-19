@@ -46,7 +46,7 @@ type TestMessageSchema = {
 const testMessageSchema: TestMessageSchema = {
   send_at: { index: 0, value: { type: "int", len: 32 } },
   barbershop_name: { index: 1, value: { type: "uint", len: 32 } },
-  customers_count: { index: 2, value: { type: "uint", len:32 } },
+  customers_count: { index: 2, value: { type: "uint", len: 32 } },
   customers: {
     index: 3,
     value: {
