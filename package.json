@@ -1,6 +1,6 @@
 {
   "name": "@mono424/cdr-ts",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,7 +12,7 @@
     "deploy": "pnpm run build && pnpm publish"
   },
   "author": "Khadim Fall <info@khadimfall.com> (https://khad.im/)",
-  "license": "WTFPL",
+  "license": "MIT",
   "devDependencies": {
     "@eslint/compat": "^1.1.0",
     "@types/jest": "^29.5.12",
