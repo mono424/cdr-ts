@@ -1,4 +1,4 @@
-import { CDRBuffer, arrayBufferFromBase64 } from "./buffer";
+import { CDRBuffer, arrayBufferFromBase64, createArrayBuffer } from "./buffer";
 import { CDRSchema, MapSchema } from "./schema";
 
 export interface CDRHeader {
@@ -6,25 +6,25 @@ export interface CDRHeader {
   representationOptions: bigint;
 }
 
-export interface DecoderOptions {
+export interface ParserOptions {
   maxSequenceSize: number;
   maxStringSize: number;
 }
 
-export const decodeInt = (bytes: CDRBuffer, intBitLen: number): bigint => {
+export const parseInt = (bytes: CDRBuffer, intBitLen: number): number => {
   const byteLen = Math.floor(intBitLen / 8);
   bytes.align(byteLen);
 
-  let value = BigInt(0);
+  let value = 0;
   for (let i = 0; i < byteLen; i++) {
     const [byte] = bytes.shift(1);
-    value = value | (BigInt(byte) << BigInt(i * 8));
+    value = value | (byte << (i * 8));
   }
 
   return value;
 };
 
-export const decodeUint = (bytes: CDRBuffer, uintBitLen: number): bigint => {
+export const parseUint = (bytes: CDRBuffer, uintBitLen: number): bigint => {
   const byteLen = Math.floor(uintBitLen / 8);
   bytes.align(byteLen);
 
@@ -37,11 +37,18 @@ export const decodeUint = (bytes: CDRBuffer, uintBitLen: number): bigint => {
   return value;
 };
 
-export const decodeString = (
+export const parseFloat = (bytes: CDRBuffer, intBitLen: number): number => {
+  const byteLen = Math.floor(intBitLen / 8);
+  bytes.align(byteLen);
+
+  return bytes.shiftAsDataView(byteLen).getFloat32(0, true);
+};
+
+export const parseString = (
   bytes: CDRBuffer,
   maxStringSize: number,
 ): string => {
-  const stringLen = decodeUint(bytes, 32);
+  const stringLen = parseUint(bytes, 32);
 
   if (stringLen > BigInt(maxStringSize)) {
     throw new Error(
@@ -59,9 +66,9 @@ export const decodeString = (
   return value;
 };
 
-export const decodeCDRHeader = (bytes: CDRBuffer): CDRHeader => {
-  const representationIdentifier = decodeUint(bytes, 16);
-  const representationOptions = decodeUint(bytes, 16);
+export const parseCDRHeader = (bytes: CDRBuffer): CDRHeader => {
+  const representationIdentifier = parseUint(bytes, 16);
+  const representationOptions = parseUint(bytes, 16);
 
   return {
     representationIdentifier,
@@ -69,12 +76,13 @@ export const decodeCDRHeader = (bytes: CDRBuffer): CDRHeader => {
   };
 };
 
-const decodeSequence = (
+const parseSequence = (
   bytes: CDRBuffer,
   itemSchema: CDRSchema,
-  options: DecoderOptions,
+  options: ParserOptions,
 ): MapSchema<CDRSchema>[] => {
-  const seqLen = decodeUint(bytes, 32);
+  // bytes.shift(1); // skip some byte (?)
+  const seqLen = parseUint(bytes, 32);
 
   if (seqLen > BigInt(options.maxSequenceSize)) {
     throw new Error(
@@ -83,17 +91,17 @@ const decodeSequence = (
   }
   const value: MapSchema<CDRSchema>[] = [];
   for (let i = BigInt(0); i < seqLen; i++) {
-    const item = decodeSchema(bytes, itemSchema, options);
+    const item = parseSchema(bytes, itemSchema, options);
     value.push(item);
   }
 
   return value;
 };
 
-export function decodeSchema<T extends CDRSchema>(
+export function parseSchema<T extends CDRSchema>(
   bytes: CDRBuffer,
   schema: T,
-  options: DecoderOptions,
+  options: ParserOptions,
 ): MapSchema<T> {
   const payload = {} as MapSchema<CDRSchema>;
   const entries = Object.entries(schema);
@@ -104,36 +112,36 @@ export function decodeSchema<T extends CDRSchema>(
     const { value } = fieldType;
     switch (value.type) {
       case "int":
-        payload[fieldName] = decodeInt(bytes, value.len);
+        payload[fieldName] = parseInt(bytes, value.len);
         break;
       case "uint":
-        payload[fieldName] = decodeUint(bytes, value.len);
+        payload[fieldName] = parseUint(bytes, value.len);
+        break;
+      case "float":
+        payload[fieldName] = parseFloat(bytes, value.len);
+        // console.log(fieldName, payload[fieldName]);
         break;
       case "string":
-        payload[fieldName] = decodeString(bytes, options.maxStringSize);
+        payload[fieldName] = parseString(bytes, options.maxStringSize);
         break;
       case "sequence":
-        payload[fieldName] = decodeSequence(bytes, value.itemSchema, options);
+        payload[fieldName] = parseSequence(bytes, value.itemSchema, options);
         break;
     }
   }
   return payload as MapSchema<T>;
 }
 
-export function decodeCDR<T extends CDRSchema>(
+export function parseCDR<T extends CDRSchema>(
   data: string,
   bodySchema: T,
-  options: DecoderOptions = { maxStringSize: 1024, maxSequenceSize: 1024 },
+  options: ParserOptions = { maxStringSize: 1024, maxSequenceSize: 1024 },
 ): {
   header: CDRHeader;
   payload: MapSchema<T>;
 } {
   const bytes = arrayBufferFromBase64(data);
-  const header = decodeCDRHeader(bytes);
-  const decodedPayload = decodeSchema(
-    bytes.restAsBuffer(),
-    bodySchema,
-    options,
-  );
-  return { header, payload: decodedPayload };
+  const header = parseCDRHeader(bytes);
+  const parsedPayload = parseSchema(bytes.restAsBuffer(), bodySchema, options);
+  return { header, payload: parsedPayload };
 }

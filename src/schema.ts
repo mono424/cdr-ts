@@ -10,6 +10,7 @@ export interface CDRSchemaField {
 export type CDRSchemaValue =
   | CDRSchemaIntValue
   | CDRSchemaUintValue
+  | CDRSchemaFloatValue
   | CDRSchemaStringValue
   | CDRSchemaSequenceValue;
 
@@ -23,6 +24,11 @@ export interface CDRSchemaUintValue {
   len: number;
 }
 
+export interface CDRSchemaFloatValue {
+  type: "float";
+  len: number;
+}
+
 export interface CDRSchemaStringValue {
   type: "string";
 }
@@ -33,10 +39,11 @@ export interface CDRSchemaSequenceValue {
 }
 
 type MapPrimitiveTypes = {
-  int: bigint;
+  int: number;
   uint: bigint;
   string: string;
-  sequence: unknown[];
+  sequence: any[];
+  float: number;
 };
 
 type FieldType<T extends CDRSchemaValue> = [T] extends [CDRSchemaSequenceValue]

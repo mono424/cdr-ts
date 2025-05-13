@@ -1,29 +1,29 @@
-import { decodeInt, decodeUint } from "./decoder";
+import { parseInt, parseUint } from "./parser";
 import { createArrayBuffer } from "./buffer";
 
-test("Decode Int8", () => {
+test("Parse Int8", () => {
   const bytes = createArrayBuffer(new Uint8Array([1, 9, 9, 9]));
-  expect(decodeInt(bytes, 8)).toBe(BigInt(1));
+  expect(parseInt(bytes, 8)).toBe(1);
 });
 
-test("Decode Int16", () => {
+test("Parse Int16", () => {
   const bytes = createArrayBuffer(new Uint8Array([0, 0, 1, 0, 9, 9]));
   bytes.shift(1); // Misalign
-  expect(decodeInt(bytes, 16)).toBe(BigInt(1));
+  expect(parseInt(bytes, 16)).toBe(1);
 });
 
-test("Decode Int32", () => {
+test("Parse Int32", () => {
   const bytes = createArrayBuffer(
     new Uint8Array([0, 0, 0, 0, 1, 0, 0, 0, 9, 9]),
   );
   bytes.shift(1); // Misalign
-  expect(decodeInt(bytes, 32)).toBe(BigInt(1));
+  expect(parseInt(bytes, 32)).toBe(1);
 });
 
-test("Decode Int64", () => {
+test("Parse Int64", () => {
   const bytes = createArrayBuffer(
     new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]),
   );
   bytes.shift(1); // Misalign
-  expect(decodeUint(bytes, 64)).toBe(BigInt(4294967297));
+  expect(parseUint(bytes, 64)).toBe(BigInt(4294967297));
 });

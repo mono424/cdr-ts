@@ -1,5 +1,7 @@
 export type CDRBuffer = {
   shift: (n: number) => Uint8Array;
+  shiftAsArrayBuffer: (n: number) => ArrayBuffer;
+  shiftAsDataView: (n: number) => DataView;
   align: (n: number) => void;
   peek: (n: number) => Uint8Array;
   getOffset: () => number;
@@ -16,6 +18,17 @@ export const createArrayBuffer = (bytes: Uint8Array): CDRBuffer => {
     offset += n;
     b = b.slice(n);
     return res;
+  };
+
+  const shiftAsArrayBuffer = (n: number): ArrayBuffer => {
+    const buffer = new ArrayBuffer(n);
+    const view = new Uint8Array(buffer);
+    shift(n).forEach((byte, i) => (view[i] = byte));
+    return buffer;
+  };
+
+  const shiftAsDataView = (n: number): DataView => {
+    return new DataView(shiftAsArrayBuffer(n));
   };
 
   const restAsBuffer = (): CDRBuffer => {
@@ -42,6 +55,8 @@ export const createArrayBuffer = (bytes: Uint8Array): CDRBuffer => {
 
   return {
     shift,
+    shiftAsArrayBuffer,
+    shiftAsDataView,
     align,
     peek,
     getOffset,
