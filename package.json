@@ -1,6 +1,6 @@
 {
   "name": "@mono424/cdr-ts",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,7 +8,8 @@
     "test": "jest",
     "format": "prettier --write --parser typescript 'src/*.ts'",
     "lint": "eslint . --fix",
-    "build": "tsc"
+    "build": "tsc",
+    "deploy": "pnpm run build && pnpm publish"
   },
   "author": "Khadim Fall <info@khadimfall.com> (https://khad.im/)",
   "license": "WTFPL",
