@@ -34,9 +34,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
       - name: Install Component Dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Install Wrapper Dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
       - name: Build Package
         run: pnpm build
       - name: Publish Package

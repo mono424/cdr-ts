@@ -119,8 +119,6 @@ try {
 }
 ```
 
-Okay, here's the "Schema Definition" part, jazzed up with some emojis and a friendly vibe\! 🎉
-
 ## 📜✨ Schema Definition
 
 Think of a schema as the magical map 🗺️ that tells our parser how to read your CDR data. It's like giving instructions to a super-smart robot 🤖: "This part is a number, that part is some text, and over here is a list of things\!"
