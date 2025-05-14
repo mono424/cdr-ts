@@ -1,55 +1,76 @@
-export type CDRSchema = {
-  [key: string]: CDRSchemaField;
-};
+export type CDRSchema = CDRType
 
-export interface CDRSchemaField {
-  index: number;
-  value: CDRSchemaValue;
-}
-
-export type CDRSchemaValue =
+export type CDRPrimitiveTypes =
   | CDRSchemaIntValue
   | CDRSchemaUintValue
   | CDRSchemaFloatValue
   | CDRSchemaStringValue
-  | CDRSchemaSequenceValue;
+  | CDRSchemaStringBytesValue;
+
+export type CDRType = CDRPrimitiveTypes | CDRSchemaSequenceValue<CDRType> | CDRSchemaDictionaryValue<CDRSchemaDictionaryItems>;
+
+export type CDRLength = 8 | 16 | 32 | 64;
 
 export interface CDRSchemaIntValue {
   type: "int";
-  len: number;
+  len: CDRLength;
 }
 
 export interface CDRSchemaUintValue {
   type: "uint";
-  len: number;
+  len: CDRLength;
+  format: "bigint" | "number";
 }
 
 export interface CDRSchemaFloatValue {
   type: "float";
-  len: number;
+  len: CDRLength;
 }
 
 export interface CDRSchemaStringValue {
   type: "string";
 }
 
-export interface CDRSchemaSequenceValue {
+export interface CDRSchemaStringBytesValue {
+  type: "string_bytes";
+}
+
+export interface CDRSchemaSequenceValue<K extends CDRType> {
   type: "sequence";
-  itemSchema: CDRSchema;
+  itemSchema: K;
+}
+
+export interface CDRSchemaDictionaryField<T extends CDRType> {
+  index: number;
+  value: T;
+}
+
+export type CDRSchemaDictionaryItems = { [key: string]: CDRSchemaDictionaryField<CDRType> }
+
+export interface CDRSchemaDictionaryValue<K extends CDRSchemaDictionaryItems> {
+  type: "dictionary";
+  items: K
 }
 
 type MapPrimitiveTypes = {
   int: number;
   uint: bigint;
   string: string;
-  sequence: any[];
   float: number;
+  string_bytes: Uint8Array;
 };
 
-type FieldType<T extends CDRSchemaValue> = [T] extends [CDRSchemaSequenceValue]
-  ? Array<MapSchema<T["itemSchema"]>>
-  : MapPrimitiveTypes[T["type"]];
-
-export type MapSchema<T extends CDRSchema> = {
-  [P in keyof T]: FieldType<T[P]["value"]>;
+type MapSequence<T extends CDRSchemaSequenceValue<CDRType>> = Array<MapSchema<T["itemSchema"]>>;
+type MapDictionary<T extends CDRSchemaDictionaryValue<CDRSchemaDictionaryItems>> = {
+  [P in keyof T["items"]]: MapFieldType<T["items"][P]["value"]>;
 };
+
+export type MapFieldType<T extends CDRType> = [T] extends [CDRSchemaDictionaryValue<CDRSchemaDictionaryItems>]
+  ? MapDictionary<T>
+  : [T] extends [CDRSchemaSequenceValue<CDRType>]
+  ? MapSequence<T>
+  : [T] extends [CDRPrimitiveTypes]
+  ? MapPrimitiveTypes[T["type"]]
+  : never;
+
+export type MapSchema<T extends CDRSchema> = MapFieldType<T>
