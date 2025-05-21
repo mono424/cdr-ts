@@ -10,22 +10,22 @@ A robust TypeScript library for parsing data encoded in Custom Data Representati
 
 ## 🚀 Features
 
-* Parses CDR (Common Data Representation) data streams.
-* Supports a variety of primitive types:
-    * Integers: `int8`, `int16`, `int32`, `int64` (parsed as `number`)
-    * Unsigned Integers: `uint8`, `uint16`, `uint32` (parsed as `number`), `uint64` (parsed as `number` or `bigint`)
-    * Floating-point numbers: `float32`, `float64` (currently `float32` is fully implemented and tested for parsing)
-    * `string` (UTF-8, null-terminated)
-    * `string_bytes` (sequence of bytes, null-terminated, parsed as `Uint8Array`)
-* Supports composite types:
-    * `sequence`: Ordered list of elements of the same type (parsed as an `Array`).
-    * `dictionary`: A collection of key-value pairs, where keys are strings and values can be any CDR type (parsed as an `object`). Fields are parsed in the order of their `index` property.
-* Type-safe parsing: The structure and types of the parsed payload are determined by the provided schema, leveraging TypeScript's type system (`MapSchema` utility type).
-* Handles byte alignment as per CDR specification.
-* Parses the standard CDR header (representation identifier and options).
-* Configurable maximum sizes for sequences and strings to prevent excessive memory allocation.
-* Accepts base64 encoded strings as input for CDR data.
-* Includes utility for creating and managing byte buffers.
+- Parses CDR (Common Data Representation) data streams.
+- Supports a variety of primitive types:
+  - Integers: `int8`, `int16`, `int32`, `int64` (parsed as `number`)
+  - Unsigned Integers: `uint8`, `uint16`, `uint32` (parsed as `number`), `uint64` (parsed as `number` or `bigint`)
+  - Floating-point numbers: `float32`, `float64` (currently `float32` is fully implemented and tested for parsing)
+  - `string` (UTF-8, null-terminated)
+  - `string_bytes` (sequence of bytes, null-terminated, parsed as `Uint8Array`)
+- Supports composite types:
+  - `sequence`: Ordered list of elements of the same type (parsed as an `Array`).
+  - `dictionary`: A collection of key-value pairs, where keys are strings and values can be any CDR type (parsed as an `object`). Fields are parsed in the order of their `index` property.
+- Type-safe parsing: The structure and types of the parsed payload are determined by the provided schema, leveraging TypeScript's type system (`MapSchema` utility type).
+- Handles byte alignment as per CDR specification.
+- Parses the standard CDR header (representation identifier and options).
+- Configurable maximum sizes for sequences and strings to prevent excessive memory allocation.
+- Accepts base64 encoded strings as input for CDR data.
+- Includes utility for creating and managing byte buffers.
 
 ## 🛠️ Installation
 
@@ -53,21 +53,21 @@ pnpm install
 
 ## 📖 Usage
 
-To parse CDR data, you first need to define a schema that describes the structure of your data. Then, you can use the `parseCDR` function.
+To parse CDR data, you first need to define a schema that describes the structure of your data. Then, you can use the `parseCDRString` or `parseCDRBytes` functions.
 
 ### 1. Define Your Schema
 
 The schema defines the fields, their order (via `index`), and their types.
 
 ```typescript
-import { CDRSchema, MapSchema } from '@mono424/cdr-ts';
+import { CDRSchema, MapSchema } from "@mono424/cdr-ts";
 
 type MyDataType = CDRSchemaDictionaryValue<{
-  stamp_s: CDRSchemaDictionaryField<CDRSchemaIntValue>,
-  stamp_ns: CDRSchemaDictionaryField<CDRSchemaUintValue>,
-  frame_id: CDRSchemaDictionaryField<CDRSchemaStringValue>,
-  data: CDRSchemaDictionaryField<CDRSchemaSequenceValue<CDRSchemaUintValue>>,
-}>
+  stamp_s: CDRSchemaDictionaryField<CDRSchemaIntValue>;
+  stamp_ns: CDRSchemaDictionaryField<CDRSchemaUintValue>;
+  frame_id: CDRSchemaDictionaryField<CDRSchemaStringValue>;
+  data: CDRSchemaDictionaryField<CDRSchemaSequenceValue<CDRSchemaUintValue>>;
+}>;
 
 // Define the schema for your data structure
 const myDataSchema: MyDataType = {
@@ -76,36 +76,47 @@ const myDataSchema: MyDataType = {
     stamp_s: { index: 0, value: { type: "int", len: 32 } },
     stamp_ns: { index: 1, value: { type: "uint", len: 32, format: "number" } },
     frame_id: { index: 2, value: { type: "string" } },
-    data: { index: 3, value: { type: "sequence", itemSchema: { type: "uint", len: 8, format: "number" } } },
-  }
+    data: {
+      index: 3,
+      value: {
+        type: "sequence",
+        itemSchema: { type: "uint", len: 8, format: "number" },
+      },
+    },
+  },
 };
 ```
 
 ### 2. Parse the CDR Data
 
-Provide the base64 encoded CDR string and your schema to `parseCDR`.
+Provide the base64 encoded CDR string and your schema to `parseCDRString`.
 
 ```typescript
-import { parseCDR, ParserOptions } from '@mono424/cdr-ts'; // or './src/parser' if local
+import { parseCDRString, ParserOptions } from "@mono424/cdr-ts"; // or './src/parser' if local
 
-const base64Data = "AAEAAAABAAAAAQAAAAZm9vYmFyAAAAAAAAAAAAPkAAABAAAAABAAAADHRlc3RfdGFnXzAxAAAA"; // Example base64 string
+const base64Data =
+  "AAEAAAABAAAAAQAAAAZm9vYmFyAAAAAAAAAAAAPkAAABAAAAABAAAADHRlc3RfdGFnXzAxAAAA"; // Example base64 string
 
 const options: ParserOptions = {
-  maxStringSize: 1024,    // Default: 1024
-  maxSequenceSize: 512,   // Default: 1024
+  maxStringSize: 1024, // Default: 1024
+  maxSequenceSize: 512, // Default: 1024
 };
 
 try {
-  const { header, payload } = parseCDR(base64Data, cameraPacketSchema, options);
+  const { header, payload } = parseCDRString(
+    base64Data,
+    cameraPacketSchema,
+    options,
+  );
 
   console.log("Parsed CDR Header:", header);
   console.log("Parsed Payload:", payload);
 
   // Accessing fields (types are inferred from the schema)
-  console.log("Timestamp (seconds):", payload.stamp_s);        // number
-  console.log("Timestamp (nanoseconds):", payload.stamp_ns);  // number
-  console.log("Frame ID:", payload.frame_id);                  // string
-  console.log("Data Length:", payload.data.length);            // number (length of Uint8Array sequence)
+  console.log("Timestamp (seconds):", payload.stamp_s); // number
+  console.log("Timestamp (nanoseconds):", payload.stamp_ns); // number
+  console.log("Frame ID:", payload.frame_id); // string
+  console.log("Data Length:", payload.data.length); // number (length of Uint8Array sequence)
   // payload.data is Array<number>
 
   // Example specific assertions from tests:
@@ -113,7 +124,6 @@ try {
   // expect(parsed.payload.stamp_ns).toBe(291125000)
   // expect(parsed.payload.frame_id).toBe("62")
   // expect(parsed.payload.data).toHaveLength(5456)
-
 } catch (error) {
   console.error("Error parsing CDR data:", error);
 }
@@ -129,86 +139,86 @@ By defining a schema, you make sure the parser understands your data perfectly a
 
 First, a few key terms you'll see:
 
-  * `CDRSchema`: This is the big umbrella ☂️ for any type of CDR data structure you can define.
-  * `CDRType`: Represents any specific CDR type – whether it's a simple number or a complex structure.
-  * `CDRPrimitiveTypes`: These are your basic data types, like numbers 🔢 and text 文字列.
-  * `CDRLength`: For our number-loving types, this specifies how big they are in bits (like `8`, `16`, `32`, or `64` bit).
+- `CDRSchema`: This is the big umbrella ☂️ for any type of CDR data structure you can define.
+- `CDRType`: Represents any specific CDR type – whether it's a simple number or a complex structure.
+- `CDRPrimitiveTypes`: These are your basic data types, like numbers 🔢 and text 文字列.
+- `CDRLength`: For our number-loving types, this specifies how big they are in bits (like `8`, `16`, `32`, or `64` bit).
 
 ### Primitive Types: The Simple Stuff 🍬
 
 These are the fundamental data types:
 
-  * **Integer (`CDRSchemaIntValue`)**: For whole numbers\! ℤ
+- **Integer (`CDRSchemaIntValue`)**: For whole numbers\! ℤ
 
-      * `type: "int"`
-      * `len: CDRLength` (e.g., 8, 16, 32, 64)
-      * Example: `{ type: "int", len: 32 }` (a standard 32-bit integer)
+  - `type: "int"`
+  - `len: CDRLength` (e.g., 8, 16, 32, 64)
+  - Example: `{ type: "int", len: 32 }` (a standard 32-bit integer)
 
-  * **Unsigned Integer (`CDRSchemaUintValue`)**: For whole numbers that are always positive\! ➕
+- **Unsigned Integer (`CDRSchemaUintValue`)**: For whole numbers that are always positive\! ➕
 
-      * `type: "uint"`
-      * `len: CDRLength`
-      * `format: "bigint" | "number"` (Use `"bigint"` for those really huge `uint64` numbers that need extra space\!)
-      * Example (regular number): `{ type: "uint", len: 32, format: "number" }`
-      * Example (big boi number): `{ type: "uint", len: 64, format: "bigint" }`
+  - `type: "uint"`
+  - `len: CDRLength`
+  - `format: "bigint" | "number"` (Use `"bigint"` for those really huge `uint64` numbers that need extra space\!)
+  - Example (regular number): `{ type: "uint", len: 32, format: "number" }`
+  - Example (big boi number): `{ type: "uint", len: 64, format: "bigint" }`
 
-  * **Float (`CDRSchemaFloatValue`)**: For numbers with decimal points.
+- **Float (`CDRSchemaFloatValue`)**: For numbers with decimal points.
 
-      * `type: "float"`
-      * `len: CDRLength` (Usually `32` for single-precision or `64` for double-precision. Our parser is currently best friends with `len: 32` for Float32\!)
-      * Example: `{ type: "float", len: 32 }`
+  - `type: "float"`
+  - `len: CDRLength` (Usually `32` for single-precision or `64` for double-precision. Our parser is currently best friends with `len: 32` for Float32\!)
+  - Example: `{ type: "float", len: 32 }`
 
-  * **String (`CDRSchemaStringValue`)**: For good old text\! 📝
+- **String (`CDRSchemaStringValue`)**: For good old text\! 📝
 
-      * `type: "string"` (Reads UTF-8 text that ends with a special 'null' character)
-      * Example: `{ type: "string" }`
+  - `type: "string"` (Reads UTF-8 text that ends with a special 'null' character)
+  - Example: `{ type: "string" }`
 
-  * **String Bytes (`CDRSchemaStringBytesValue`)**: For when your "string" is more like a sequence of raw bytes.
+- **String Bytes (`CDRSchemaStringBytesValue`)**: For when your "string" is more like a sequence of raw bytes.
 
-      * `type: "string_bytes"` (Also ends with a 'null' character, gives you a `Uint8Array`)
-      * Example: `{ type: "string_bytes" }`
+  - `type: "string_bytes"` (Also ends with a 'null' character, gives you a `Uint8Array`)
+  - Example: `{ type: "string_bytes" }`
 
 ### Composite Types: Building Cool Structures 🏗️
 
 These types let you group primitive types (or even other composite types\!) together:
 
-  * **Sequence (`CDRSchemaSequenceValue<K extends CDRType>`)**: An ordered list of items, all of the same type\! Think of it as an array. ➡️[📦, 📦, 📦]
+- **Sequence (`CDRSchemaSequenceValue<K extends CDRType>`)**: An ordered list of items, all of the same type\! Think of it as an array. ➡️[📦, 📦, 📦]
 
-      * `type: "sequence"`
-      * `itemSchema: K` (This is where you define the schema for each item in the list)
-      * Example (a list of tiny unsigned numbers):
-        `{ type: "sequence", itemSchema: { type: "uint", len: 8, format: "number" } }`
+  - `type: "sequence"`
+  - `itemSchema: K` (This is where you define the schema for each item in the list)
+  - Example (a list of tiny unsigned numbers):
+    `{ type: "sequence", itemSchema: { type: "uint", len: 8, format: "number" } }`
 
-  * **Dictionary (`CDRSchemaDictionaryValue<K extends CDRSchemaDictionaryItems>`)**: A collection of named fields, like a JavaScript object or a real dictionary\! 📖 {🔑:💎}
+- **Dictionary (`CDRSchemaDictionaryValue<K extends CDRSchemaDictionaryItems>`)**: A collection of named fields, like a JavaScript object or a real dictionary\! 📖 {🔑:💎}
 
-      * `type: "dictionary"`
-      * `items: K` (An object where each key is a field name, and its value describes that field)
-      * Inside `items`, each field is a `CDRSchemaDictionaryField`:
-          * `index: number` (Super important\! Tells the parser the order to read fields, starting from 0 🥇🥈🥉)
-          * `value: T` (The schema for this specific field's value)
-      * Example (a little dictionary with an ID and a name):
-        ```typescript
-        {
-          type: "dictionary",
-          items: {
-            id: { index: 0, value: { type: "int", len: 32 } }, // First field!
-            name: { index: 1, value: { type: "string" } }      // Second field!
-          }
-        }
-        ```
+  - `type: "dictionary"`
+  - `items: K` (An object where each key is a field name, and its value describes that field)
+  - Inside `items`, each field is a `CDRSchemaDictionaryField`:
+    - `index: number` (Super important\! Tells the parser the order to read fields, starting from 0 🥇🥈🥉)
+    - `value: T` (The schema for this specific field's value)
+  - Example (a little dictionary with an ID and a name):
+    ```typescript
+    {
+      type: "dictionary",
+      items: {
+        id: { index: 0, value: { type: "int", len: 32 } }, // First field!
+        name: { index: 1, value: { type: "string" } }      // Second field!
+      }
+    }
+    ```
 
 ### ✨ Magical Type Inference with `MapSchema` ✨
 
-Here's a really cool part\! When you give `parseCDR` your carefully crafted schema, it doesn't just parse the data; it also knows the *exact TypeScript type* of the payload you'll get back\! 🧙‍♂️
+Here's a really cool part\! When you give `parseCDRString` or `parseCDRBytes` your carefully crafted schema, it doesn't just parse the data; it also knows the _exact TypeScript type_ of the payload you'll get back\! 🧙‍♂️
 
 This is thanks to a helper type called `MapSchema<T extends CDRSchema>`.
 
 For instance:
 
-  * If your schema says `{ type: "int", len: 32 }`, `MapSchema` knows the output is a `number`.
-  * If it's `{ type: "string" }`, you'll get a `string`.
-  * A `{ type: "sequence", itemSchema: { type: "int", len: 16 } }` will give you a `number[]` (an array of numbers).
-  * And a dictionary schema? You guessed it\! An object with perfectly typed properties.
+- If your schema says `{ type: "int", len: 32 }`, `MapSchema` knows the output is a `number`.
+- If it's `{ type: "string" }`, you'll get a `string`.
+- A `{ type: "sequence", itemSchema: { type: "int", len: 16 } }` will give you a `number[]` (an array of numbers).
+- And a dictionary schema? You guessed it\! An object with perfectly typed properties.
 
 ## 🧪 Testing
 

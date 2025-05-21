@@ -1,5 +1,13 @@
 import { CDRBuffer, arrayBufferFromBase64, createArrayBuffer } from "./buffer";
-import { CDRSchema, CDRSchemaDictionaryItems, CDRSchemaDictionaryValue, CDRSchemaSequenceValue, CDRType, MapFieldType, MapSchema } from "./schema";
+import {
+  CDRSchema,
+  CDRSchemaDictionaryItems,
+  CDRSchemaDictionaryValue,
+  CDRSchemaSequenceValue,
+  CDRType,
+  MapFieldType,
+  MapSchema,
+} from "./schema";
 
 export interface CDRHeader {
   representationIdentifier: number;
@@ -37,7 +45,10 @@ export const parseUint = (bytes: CDRBuffer, uintBitLen: number): number => {
   return value;
 };
 
-export const parseUintToBigInt = (bytes: CDRBuffer, uintBitLen: number): bigint => {
+export const parseUintToBigInt = (
+  bytes: CDRBuffer,
+  uintBitLen: number,
+): bigint => {
   const byteLen = Math.floor(uintBitLen / 8);
   bytes.align(byteLen);
 
@@ -128,7 +139,10 @@ const parseSequence = <K extends CDRType, T extends CDRSchemaSequenceValue<K>>(
   return value;
 };
 
-export const parseDictionary = <K extends CDRSchemaDictionaryItems, T extends CDRSchemaDictionaryValue<K>>(
+export const parseDictionary = <
+  K extends CDRSchemaDictionaryItems,
+  T extends CDRSchemaDictionaryValue<K>,
+>(
   bytes: CDRBuffer,
   schema: T,
   options: ParserOptions,
@@ -143,8 +157,8 @@ export const parseDictionary = <K extends CDRSchemaDictionaryItems, T extends CD
     payload[fieldName] = parseField(bytes, value, options);
   }
 
-  return payload
-}
+  return payload;
+};
 
 export function parseField<T extends CDRType>(
   bytes: CDRBuffer,
@@ -178,9 +192,39 @@ export function parseField<T extends CDRType>(
   }
 }
 
-const defaultOptions: ParserOptions = { maxStringSize: 1024, maxSequenceSize: 1024 };
+const defaultOptions: ParserOptions = {
+  maxStringSize: 1024,
+  maxSequenceSize: 1024,
+};
 
-export function parseCDR<T extends CDRSchema>(
+function parseCDR<T extends CDRSchema>(
+  buffer: CDRBuffer,
+  bodySchema: T,
+  options: Partial<ParserOptions> = {},
+): {
+  header: CDRHeader;
+  payload: MapSchema<T>;
+} {
+  const header = parseCDRHeader(buffer);
+  const parsedPayload = parseField(buffer.restAsBuffer(), bodySchema, {
+    ...defaultOptions,
+    ...options,
+  });
+  return { header, payload: parsedPayload };
+}
+
+export function parseCDRBytes<T extends CDRSchema>(
+  data: Uint8Array,
+  bodySchema: T,
+  options: Partial<ParserOptions> = {},
+): {
+  header: CDRHeader;
+  payload: MapSchema<T>;
+} {
+  return parseCDR(createArrayBuffer(data), bodySchema, options);
+}
+
+export function parseCDRString<T extends CDRSchema>(
   data: string,
   bodySchema: T,
   options: Partial<ParserOptions> = {},
@@ -188,8 +232,5 @@ export function parseCDR<T extends CDRSchema>(
   header: CDRHeader;
   payload: MapSchema<T>;
 } {
-  const bytes = arrayBufferFromBase64(data);
-  const header = parseCDRHeader(bytes);
-  const parsedPayload = parseField(bytes.restAsBuffer(), bodySchema, { ...defaultOptions, ...options });
-  return { header, payload: parsedPayload };
+  return parseCDR(arrayBufferFromBase64(data), bodySchema, options);
 }
