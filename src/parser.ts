@@ -80,31 +80,26 @@ export const parseString = (
     );
   }
 
-  let value = "";
-  for (let i = BigInt(0); i < stringLen - BigInt(1); i++) {
-    const [byte] = bytes.shift(1);
-    value += String.fromCharCode(byte);
-  }
+  const decoder = new TextDecoder();
+  const stringBytes = bytes.shift(Number(stringLen) - 1);
   bytes.shift(1); // remove null terminator
-
-  return value;
+  return decoder.decode(stringBytes);
 };
 
 export const parseStringBytes = (
   bytes: CDRBuffer,
   maxStringSize: number,
-): Uint8Array<ArrayBuffer> => {
+): Uint8Array => {
   const stringLen = parseUint(bytes, 32);
 
-  if (stringLen > BigInt(maxStringSize)) {
+  if (stringLen > maxStringSize) {
     throw new Error(
       `String length ${stringLen} exceeds maxStringSize ${maxStringSize}`,
     );
   }
 
-  let value = bytes.shift(Number(stringLen) - 1);
+  const value = bytes.shift(Number(stringLen) - 1);
   bytes.shift(1); // remove null terminator
-
   return value;
 };
 
@@ -125,15 +120,15 @@ const parseSequence = <K extends CDRType, T extends CDRSchemaSequenceValue<K>>(
 ): MapFieldType<K>[] => {
   const seqLen = parseUint(bytes, 32);
 
-  if (seqLen > BigInt(options.maxSequenceSize)) {
+  if (seqLen > options.maxSequenceSize) {
     throw new Error(
       `Sequence length ${seqLen} exceeds maxSequenceSize ${options.maxSequenceSize}`,
     );
   }
-  const value: MapFieldType<K>[] = [];
-  for (let i = BigInt(0); i < seqLen; i++) {
-    const item = parseField<K>(bytes, schema.itemSchema, options);
-    value.push(item);
+
+  const value = new Array(Number(seqLen));
+  for (let i = 0; i < seqLen; i++) {
+    value[i] = parseField<K>(bytes, schema.itemSchema, options);
   }
 
   return value;

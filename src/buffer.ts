@@ -14,21 +14,24 @@ export const createArrayBuffer = (bytes: Uint8Array): CDRBuffer => {
   let offset = 0;
 
   const shift = (n: number): Uint8Array => {
-    const res = b.slice(0, n);
+    const res = b.subarray(0, n);
     offset += n;
-    b = b.slice(n);
+    b = b.subarray(n);
     return res;
   };
 
   const shiftAsArrayBuffer = (n: number): ArrayBuffer => {
-    const buffer = new ArrayBuffer(n);
-    const view = new Uint8Array(buffer);
-    shift(n).forEach((byte, i) => (view[i] = byte));
-    return buffer;
+    const res = b.subarray(0, n);
+    offset += n;
+    b = b.subarray(n);
+    return res.buffer.slice(res.byteOffset, res.byteOffset + res.byteLength);
   };
 
   const shiftAsDataView = (n: number): DataView => {
-    return new DataView(shiftAsArrayBuffer(n));
+    const res = b.subarray(0, n);
+    offset += n;
+    b = b.subarray(n);
+    return new DataView(res.buffer, res.byteOffset, res.byteLength);
   };
 
   const restAsBuffer = (): CDRBuffer => {
@@ -42,7 +45,7 @@ export const createArrayBuffer = (bytes: Uint8Array): CDRBuffer => {
   };
 
   const peek = (n: number): Uint8Array => {
-    return b.slice(0, n);
+    return b.subarray(0, n);
   };
 
   const getOffset = (): number => {
