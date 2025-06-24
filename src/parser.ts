@@ -118,7 +118,7 @@ const parseSequence = <K extends CDRType, T extends CDRSchemaSequenceValue<K>>(
   schema: T,
   options: ParserOptions,
 ): MapFieldType<K>[] => {
-  const seqLen = parseUint(bytes, 32);
+  const seqLen = schema.size ?? parseUint(bytes, 32);
 
   if (seqLen > options.maxSequenceSize) {
     throw new Error(
