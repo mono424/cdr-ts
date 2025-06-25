@@ -3,6 +3,7 @@ import {
   CDRSchema,
   CDRSchemaDictionaryItems,
   CDRSchemaDictionaryValue,
+  CDRSchemaEnumValue,
   CDRSchemaSequenceValue,
   CDRType,
   MapFieldType,
@@ -103,6 +104,14 @@ export const parseStringBytes = (
   return value;
 };
 
+export const parseBoolean = (bytes: CDRBuffer): boolean => {
+  const byte = bytes.shift(1)[0];
+  if (byte !== 0 && byte !== 1) {
+    throw new Error(`Invalid boolean value: ${byte}`);
+  }
+  return byte === 1;
+};
+
 export const parseCDRHeader = (bytes: CDRBuffer): CDRHeader => {
   const representationIdentifier = parseUint(bytes, 16);
   const representationOptions = parseUint(bytes, 16);
@@ -111,6 +120,14 @@ export const parseCDRHeader = (bytes: CDRBuffer): CDRHeader => {
     representationIdentifier,
     representationOptions,
   };
+};
+
+export const parseEnum = <K extends Enumerator>(
+  bytes: CDRBuffer,
+  schema: CDRSchemaEnumValue<K>,
+): K => {
+  const enumValue = parseUint(bytes, 32);
+  return schema[enumValue] as K;
 };
 
 const parseSequence = <K extends CDRType, T extends CDRSchemaSequenceValue<K>>(
@@ -178,6 +195,12 @@ export function parseField<T extends CDRType>(
 
     case "string_bytes":
       return parseStringBytes(bytes, options.maxStringSize) as MapFieldType<T>;
+
+    case "boolean":
+      return parseBoolean(bytes) as MapFieldType<T>;
+
+    case "enum":
+      return parseEnum(bytes, fieldType) as MapFieldType<T>;
 
     case "sequence":
       return parseSequence(bytes, fieldType, options) as MapFieldType<T>;

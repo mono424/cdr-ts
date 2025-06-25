@@ -5,10 +5,12 @@ export type CDRPrimitiveTypes =
   | CDRSchemaUintValue
   | CDRSchemaFloatValue
   | CDRSchemaStringValue
-  | CDRSchemaStringBytesValue;
+  | CDRSchemaStringBytesValue
+  | CDRSchemaBooleanValue;
 
 export type CDRType =
   | CDRPrimitiveTypes
+  | CDRSchemaEnumValue<Enumerator>
   | CDRSchemaSequenceValue<CDRType>
   | CDRSchemaDictionaryValue<CDRSchemaDictionaryItems>;
 
@@ -23,6 +25,15 @@ export interface CDRSchemaUintValue {
   type: "uint";
   len: CDRLength;
   format: "bigint" | "number";
+}
+
+export interface CDRSchemaBooleanValue {
+  type: "boolean";
+}
+
+export interface CDRSchemaEnumValue<K extends Enumerator> {
+  type: "enum";
+  enum: K;
 }
 
 export interface CDRSchemaFloatValue {
@@ -64,8 +75,10 @@ type MapPrimitiveTypes = {
   string: string;
   float: number;
   string_bytes: Uint8Array;
+  boolean: boolean;
 };
 
+type MapEnum<T extends CDRSchemaEnumValue<Enumerator>> = T["enum"];
 type MapSequence<T extends CDRSchemaSequenceValue<CDRType>> = Array<
   MapSchema<T["itemSchema"]>
 >;
@@ -79,10 +92,12 @@ export type MapFieldType<T extends CDRType> = [T] extends [
   CDRSchemaDictionaryValue<CDRSchemaDictionaryItems>,
 ]
   ? MapDictionary<T>
-  : [T] extends [CDRSchemaSequenceValue<CDRType>]
-    ? MapSequence<T>
-    : [T] extends [CDRPrimitiveTypes]
-      ? MapPrimitiveTypes[T["type"]]
-      : never;
+  : [T] extends [CDRSchemaEnumValue<Enumerator>]
+    ? MapEnum<T>
+    : [T] extends [CDRSchemaSequenceValue<CDRType>]
+      ? MapSequence<T>
+      : [T] extends [CDRPrimitiveTypes]
+        ? MapPrimitiveTypes[T["type"]]
+        : never;
 
 export type MapSchema<T extends CDRSchema> = MapFieldType<T>;
