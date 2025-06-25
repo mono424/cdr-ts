@@ -6,6 +6,7 @@ import {
   CDRSchemaEnumValue,
   CDRSchemaSequenceValue,
   CDRType,
+  Enumerator,
   MapFieldType,
   MapSchema,
 } from "./schema";

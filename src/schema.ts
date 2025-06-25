@@ -1,3 +1,8 @@
+export type Enumerator = {
+  [key: string]: string | number;
+  [key: number]: string;
+};
+
 export type CDRSchema = CDRType;
 
 export type CDRPrimitiveTypes =
