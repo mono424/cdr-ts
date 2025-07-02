@@ -148,27 +148,42 @@ First, a few key terms you'll see:
 
 These are the fundamental data types:
 
-- **Integer (`CDRSchemaIntValue`)**: For whole numbers\! ℤ
+- **Integer (`CDRSchemaIntValue`)**: For whole numbers! ℤ
 
   - `type: "int"`
   - `len: CDRLength` (e.g., 8, 16, 32, 64)
   - Example: `{ type: "int", len: 32 }` (a standard 32-bit integer)
 
-- **Unsigned Integer (`CDRSchemaUintValue`)**: For whole numbers that are always positive\! ➕
+- **Unsigned Integer (`CDRSchemaUintValue`)**: For whole numbers that are always positive! ➕
 
   - `type: "uint"`
   - `len: CDRLength`
-  - `format: "bigint" | "number"` (Use `"bigint"` for those really huge `uint64` numbers that need extra space\!)
+  - `format: "bigint" | "number"` (Use `"bigint"` for those really huge `uint64` numbers that need extra space!)
   - Example (regular number): `{ type: "uint", len: 32, format: "number" }`
   - Example (big boi number): `{ type: "uint", len: 64, format: "bigint" }`
 
 - **Float (`CDRSchemaFloatValue`)**: For numbers with decimal points.
 
   - `type: "float"`
-  - `len: CDRLength` (Usually `32` for single-precision or `64` for double-precision. Our parser is currently best friends with `len: 32` for Float32\!)
+  - `len: CDRLength` (Usually `32` for single-precision or `64` for double-precision. Our parser is currently best friends with `len: 32` for Float32!)
   - Example: `{ type: "float", len: 32 }`
 
-- **String (`CDRSchemaStringValue`)**: For good old text\! 📝
+- **Boolean (`CDRSchemaBooleanValue`)**: For true/false values! ✅❌
+
+  - `type: "boolean"`
+  - Example: `{ type: "boolean" }`
+
+- **Enum (`CDRSchemaEnumValue`)**: For a value that can be one of a fixed set of named constants! 🎌
+
+  - `type: "enum"`
+  - `enum: { ... }` (An object mapping names to values)
+  - Example:
+    ```typescript
+    { type: "enum", enum: { RED: 0, GREEN: 1, BLUE: 2 } }
+    // Accepts only 0, 1, or 2 (maps to RED, GREEN, BLUE)
+    ```
+
+- **String (`CDRSchemaStringValue`)**: For good old text! 📝
 
   - `type: "string"` (Reads UTF-8 text that ends with a special 'null' character)
   - Example: `{ type: "string" }`
@@ -180,21 +195,30 @@ These are the fundamental data types:
 
 ### Composite Types: Building Cool Structures 🏗️
 
-These types let you group primitive types (or even other composite types\!) together:
+These types let you group primitive types (or even other composite types!) together:
 
-- **Sequence (`CDRSchemaSequenceValue<K extends CDRType>`)**: An ordered list of items, all of the same type\! Think of it as an array. ➡️[📦, 📦, 📦]
+- **Sequence (`CDRSchemaSequenceValue<K extends CDRType>`)**: An ordered list of items, all of the same type! Think of it as an array. ➡️[📦, 📦, 📦]
 
   - `type: "sequence"`
   - `itemSchema: K` (This is where you define the schema for each item in the list)
   - Example (a list of tiny unsigned numbers):
     `{ type: "sequence", itemSchema: { type: "uint", len: 8, format: "number" } }`
 
-- **Dictionary (`CDRSchemaDictionaryValue<K extends CDRSchemaDictionaryItems>`)**: A collection of named fields, like a JavaScript object or a real dictionary\! 📖 {🔑:💎}
+- **Fixed Size Array**: A sequence with a fixed number of elements! 📏
+
+  - Use the `size` property on a sequence schema.
+  - Example (an array of exactly 4 booleans):
+    ```typescript
+    { type: "sequence", itemSchema: { type: "boolean" }, size: 4 }
+    // Always parses exactly 4 booleans
+    ```
+
+- **Dictionary (`CDRSchemaDictionaryValue<K extends CDRSchemaDictionaryItems>`)**: A collection of named fields, like a JavaScript object or a real dictionary! 📖 {🔑:💎}
 
   - `type: "dictionary"`
   - `items: K` (An object where each key is a field name, and its value describes that field)
   - Inside `items`, each field is a `CDRSchemaDictionaryField`:
-    - `index: number` (Super important\! Tells the parser the order to read fields, starting from 0 🥇🥈🥉)
+    - `index: number` (Super important! Tells the parser the order to read fields, starting from 0 🥇🥈🥉)
     - `value: T` (The schema for this specific field's value)
   - Example (a little dictionary with an ID and a name):
     ```typescript
