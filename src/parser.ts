@@ -67,7 +67,13 @@ export const parseFloat = (bytes: CDRBuffer, intBitLen: number): number => {
   const byteLen = Math.floor(intBitLen / 8);
   bytes.align(byteLen);
 
-  return bytes.shiftAsDataView(byteLen).getFloat32(0, true);
+  if (intBitLen === 32) {
+    return bytes.shiftAsDataView(byteLen).getFloat32(0, true);
+  } else if (intBitLen === 64) {
+    return bytes.shiftAsDataView(byteLen).getFloat64(0, true);
+  } else {
+    throw new Error(`Invalid float bit length: ${intBitLen}`);
+  }
 };
 
 export const parseString = (
