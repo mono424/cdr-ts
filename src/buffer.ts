@@ -24,7 +24,10 @@ export const createArrayBuffer = (bytes: Uint8Array): CDRBuffer => {
     const res = b.subarray(0, n);
     offset += n;
     b = b.subarray(n);
-    return res.buffer.slice(res.byteOffset, res.byteOffset + res.byteLength);
+    return res.buffer.slice(
+      res.byteOffset,
+      res.byteOffset + res.byteLength,
+    ) as ArrayBuffer;
   };
 
   const shiftAsDataView = (n: number): DataView => {
